@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../TestApp/TestApp.csproj" />
+  <Project Path="ExcelService.csproj" />
+</Solution>
