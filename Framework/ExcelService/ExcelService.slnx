@@ -1,4 +1,4 @@
 <Solution>
-  <Project Path="../TestApp/TestApp.csproj" />
-  <Project Path="ExcelService.csproj" />
+  <Project Path="../TestApp/TestApp.csproj" Id="891ac6ba-bc37-4092-978f-51ff4c82b740" />
+  <Project Path="ExcelService.csproj" Id="5bdbcbc7-55d0-49e3-bd9b-43913b54d813" />
 </Solution>
