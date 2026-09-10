@@ -91,6 +91,9 @@
   <ItemGroup>
     <Compile Include="Helper\AppConstant.cs" />
     <Compile Include="Helper\ExcelHelper.cs" />
+    <Compile Include="Helper\ExcelLicenseInitializer.cs" />
+    <Compile Include="Helper\ExcelMetadataHelper.cs" />
+    <Compile Include="Helper\ExcelRenderer.cs" />
     <Compile Include="Helper\ExcelServiceStyle.cs" />
     <Compile Include="Model\ExcelHeader.cs" />
     <Compile Include="Model\ExcelHeaderGroup.cs" />
@@ -98,7 +101,8 @@
     <Compile Include="Model\ExcelStyle.cs" />
     <Compile Include="Model\ExcelWorkbookStyle.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Service\ExcelServiceHelper.cs" />
+    <Compile Include="Service\ExcelMapper.cs" />
+    <Compile Include="Service\IExcelMapper.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

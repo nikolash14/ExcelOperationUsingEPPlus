@@ -2,7 +2,7 @@
 
 namespace ExcelService.Helper
 {
-    public class ExcelServiceStyle
+    public class ExcelStylePresets
     {
         public static ExcelStyle DefaultHeaderStyle => new ExcelStyle
         {

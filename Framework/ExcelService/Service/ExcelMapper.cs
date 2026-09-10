@@ -1,4 +1,4 @@
-﻿using ExcelService.Helper;
+using ExcelService.Helper;
 using ExcelService.Model;
 using OfficeOpenXml;
 using System;
@@ -6,96 +6,95 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using static OfficeOpenXml.ExcelErrorValue;
+
 namespace ExcelService.Service
 {
-    public class ExcelServiceHelper
+    public class ExcelMapper : IExcelMapper
     {
-        // Returns the maximum depth (number of header rows) required for the provided headers
-        public static int GetTotalDepth(List<ExcelHeader> headers)
+        // Instance implementation to improve testability and DI
+        public ExcelMapper()
         {
-            if (headers == null || headers.Count == 0)
-                return 0;
-            return headers.Max(h => h.GetDepth());
         }
 
-        public static byte[] CreateExcel(
+        public byte[] CreateExcel(
             string sheetName,
             List<ExcelHeader> headers,
             ExcelWorkbookStyle excelWorkbookStyle,
             IDictionary<string, string> metadata = null,
             ExcelProtectionSetting excelProtectionSetting = null)
         {
-            int totalDepth = GetTotalDepth(headers);
-            ExcelPackage.License.SetNonCommercialOrganization(AppConstant.EXCEL_HELPER_LICENSING_ORGANIZATION);
-            using (var package = new ExcelPackage())
+            using (var ms = CreateExcelStream(sheetName, headers, excelWorkbookStyle, metadata, excelProtectionSetting) as MemoryStream)
             {
-                var ws = package.Workbook.Worksheets.Add(sheetName);
-                // Render headers
-                int col = 1;
-                foreach (var header in headers)
-                {
-                    ExcelHelper.RenderHeaders(ws, header, 1, col, totalDepth);
-                    col += header.GetLeafCount();
-                }
-
-                // Render data rows
-                int row = headers.Max(h => h.GetDepth()) +1;
-                var rowData = row;
-                foreach (var record in headers)
-                {
-                    rowData = row;
-                    foreach (var value in record.Data)
-                    {
-                        ws.Cells[rowData, record.CollNo, rowData, record.CollNo].Value = value;
-                        rowData++;
-                    }
-                }
-                row = rowData;
-                //Auto-fit columns if requested
-                ExcelHelper.AutoFitColumns(
-                    excelWorkbookStyle,
-                    ws);
-
-                // ... inside ExcelServiceHelper.Export, after the data rows loop
-                //int dataStartRow = headers.Max(h => h.GetDepth()) + 1;
-                // Apply thin borders to every cell in the data area
-                int lastRow = row - 1; // row was incremented after last record
-                int lastCol = headers.Sum(h => h.GetLeafCount());
-                ExcelHelper.ApplyBorders(
-                    excelWorkbookStyle,
-                    ws,
-                    lastRow,
-                    lastCol);
-
-                // Freeze panes if requested
-                ExcelHelper.FreezePanes(
-                    excelWorkbookStyle,
-                    totalDepth,
-                    ws);
-
-                // Add metadata to a hidden sheet if provided
-                ExcelHelper.AddMetadataToSheet(
-                    package,
-                    metadata,
-                    totalDepth + 1,
-                    lastRow,
-                    1,
-                    lastCol);
-
-                //Excel Protection Settings
-                ExcelHelper.ApplyExcelProtection(
-                    excelProtectionSetting,
-                    package,
-                    ws,
-                    totalDepth);
-
-                //Return the Excel file as a byte array
-                return package.GetAsByteArray();
+                return ms?.ToArray() ?? Array.Empty<byte>();
             }
         }
 
-        public static IReadOnlyList<IReadOnlyList<T>> ReadExcelData<T>(
+        public Stream CreateExcelStream(
+            string sheetName,
+            List<ExcelHeader> headers,
+            ExcelWorkbookStyle excelWorkbookStyle,
+            IDictionary<string, string> metadata = null,
+            ExcelProtectionSetting excelProtectionSetting = null)
+        {
+            if (string.IsNullOrWhiteSpace(sheetName))
+                throw new ArgumentException("sheetName must be provided", nameof(sheetName));
+
+            if (headers == null)
+                throw new ArgumentNullException(nameof(headers));
+
+            int totalDepth = headers.Any() ? headers.Max(h => h.GetDepth()) : 0;
+
+            // EPPlus license must be initialized externally via ExcelLicenseInitializer.Initialize()
+            ExcelLicenseInitializer.Initialize();
+            var package = new ExcelPackage();
+            var ws = package.Workbook.Worksheets.Add(sheetName);
+
+            // Render headers
+            int col = 1;
+            foreach (var header in headers)
+            {
+                ExcelRenderer.RenderHeaders(ws, header, 1, col, totalDepth);
+                col += header.GetLeafCount();
+            }
+
+            // Render data rows
+            int row = headers.Any() ? headers.Max(h => h.GetDepth()) + 1 : 1;
+            var rowData = row;
+            foreach (var record in headers)
+            {
+                rowData = row;
+                foreach (var value in record.Data)
+                {
+                    ws.Cells[rowData, record.CollNo, rowData, record.CollNo].Value = value;
+                    rowData++;
+                }
+            }
+            row = rowData;
+
+            //Auto-fit columns if requested
+            ExcelRenderer.AutoFitColumns(excelWorkbookStyle, ws);
+
+            // Apply thin borders to every cell in the data area
+            int lastRow = row - 1; // row was incremented after last record
+            int lastCol = headers.Sum(h => h.GetLeafCount());
+            ExcelRenderer.ApplyBorders(excelWorkbookStyle, ws, lastRow, lastCol);
+
+            // Freeze panes if requested
+            ExcelRenderer.FreezePanes(excelWorkbookStyle, totalDepth, ws);
+
+            // Add metadata to a hidden sheet if provided
+            ExcelMetadataHelper.AddMetadataToSheet(package, metadata, totalDepth + 1, lastRow, 1, lastCol);
+
+            //Excel Protection Settings
+            ExcelRenderer.ApplyExcelProtection(excelProtectionSetting, package, ws, totalDepth);
+
+            var ms = new MemoryStream();
+            package.SaveAs(ms);
+            ms.Position = 0;
+            return ms;
+        }
+
+        public IReadOnlyList<IReadOnlyList<T>> ReadExcelData<T>(
             byte[] excelData,
             string sheetName,
             IDictionary<string, string> metadata = null)
@@ -103,18 +102,16 @@ namespace ExcelService.Service
             var result = new List<IReadOnlyList<T>>();
             using (var stream = new MemoryStream(excelData))
             {
-                ExcelPackage.License.SetNonCommercialOrganization(AppConstant.EXCEL_HELPER_LICENSING_ORGANIZATION);
                 using (var package = new ExcelPackage(stream))
                 {
                     var worksheet = package.Workbook.Worksheets[sheetName];
                     if (worksheet == null)
                         throw new ArgumentException($"Worksheet '{sheetName}' not found.");
-                    // Validate the metadata if provided with the metadata in the excel file
-                    // this meta data is provided by the user when the excel file was created and saved in a hidden sheet in the excel file
-                    // If the provided metadata does not match the metadata in the excel file, throw an exception
+
+                    // Validate the metadata if provided
                     if (metadata != null && metadata.Any())
                     {
-                        var excelMetadata = ExcelHelper.ReadMetadataFromSheet(package, AppConstant.USER_DEFINED_METASHEET);
+                        var excelMetadata = ExcelMetadataHelper.ReadMetadataFromSheet(package, AppConstant.USER_DEFINED_METASHEET);
                         foreach (var kvp in metadata)
                         {
                             if (!excelMetadata.ContainsKey(kvp.Key) || excelMetadata[kvp.Key] != kvp.Value)
@@ -124,18 +121,14 @@ namespace ExcelService.Service
                         }
                     }
 
-                    // Get the how much to be read from the worksheet
-                    // based on the dimension of the worksheet that was saved in meta data
-                    var dataReaderMetaData = ExcelHelper.ReadMetadataFromSheet(package, AppConstant.EXCEL_HELPER_METASHEET);
+                    var dataReaderMetaData = ExcelMetadataHelper.ReadMetadataFromSheet(package, AppConstant.EXCEL_HELPER_METASHEET);
                     var startRow = int.Parse(dataReaderMetaData[AppConstant.EXCEL_HELPER_METADATA_DATA_ROW_STARTS_FROM]);
                     var endRow = int.Parse(dataReaderMetaData[AppConstant.EXCEL_HELPER_METADATA_DATA_ROW_END_TO]);
                     var startCol = int.Parse(dataReaderMetaData[AppConstant.EXCEL_HELPER_METADATA_DATA_COL_STARTS_FROM]);
                     var endCol = int.Parse(dataReaderMetaData[AppConstant.EXCEL_HELPER_METADATA_DATA_COL_END_TO]);
 
-                    // add: using System.Reflection;
                     for (int row = startRow; row <= endRow; row++)
                     {
-                        // If T is a complex class (not string), construct one T per row by mapping columns to writable properties
                         if (typeof(T).IsClass && typeof(T) != typeof(string))
                         {
                             var props = typeof(T).GetProperties().Where(p => p.CanWrite).ToArray();
@@ -153,12 +146,10 @@ namespace ExcelService.Service
                                 var converted = convertMethod.Invoke(null, new object[] { rawValue, prop.PropertyType });
                                 prop.SetValue(instance, converted);
                             }
-                            // add the constructed object as the single-item row
                             result.Add(new List<T> { instance });
                         }
                         else
                         {
-                            // primitive or string: keep existing per-cell behavior
                             var rowData = new List<T>();
                             for (int col = startCol; col <= endCol; col++)
                             {
@@ -177,7 +168,6 @@ namespace ExcelService.Service
                             result.Add(rowData);
                         }
                     }
-
                 }
             }
             return result;

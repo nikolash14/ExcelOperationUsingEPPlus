@@ -16,31 +16,32 @@ namespace TestApp
             CreateExcel();
             //ReadExcel();
         }
-        private static void ReadExcel()
-        {
-            string filePath = @"D:\Temp\Reports\Orders3.json";
-            var excelBytes = File.ReadAllBytes(@"D:\Temp\Reports\Orders3.xlsx");
-            var excelData = ExcelServiceHelper.ReadExcelData<ExcelHeader>(
-                excelBytes, "excelSheet");
-            if (excelData == null)
-                throw new ArgumentNullException(nameof(excelData));
+        //private static void ReadExcel()
+        //{
+        //    string filePath = @"D:\Temp\Reports\Orders3.json";
+        //    var excelBytes = File.ReadAllBytes(@"D:\Temp\Reports\Orders3.xlsx");
+        //    var excelData = ExcelServiceHelper.ReadExcelData<ExcelHeader>(
+        //        excelBytes, "excelSheet");
+        //    if (excelData == null)
+        //        throw new ArgumentNullException(nameof(excelData));
 
-            if (string.IsNullOrWhiteSpace(filePath))
-                throw new ArgumentException("File path cannot be null or empty.", nameof(filePath));
+        //    if (string.IsNullOrWhiteSpace(filePath))
+        //        throw new ArgumentException("File path cannot be null or empty.", nameof(filePath));
 
-            // Serialize with indentation for readability
-            var options = new JsonSerializerOptions
-            {
-                WriteIndented = true
-            };
+        //    // Serialize with indentation for readability
+        //    var options = new JsonSerializerOptions
+        //    {
+        //        WriteIndented = true
+        //    };
 
-            string json = JsonSerializer.Serialize(excelData, options);
+        //    string json = JsonSerializer.Serialize(excelData, options);
 
-            File.WriteAllText(filePath, json);
-        }
+        //    File.WriteAllText(filePath, json);
+        //}
 
         private static void CreateExcel()
         {
+            IExcelMapper excelServiceHelper = new ExcelMapper();
             var workbookStyle = new ExcelWorkbookStyle
             {
                 ApplyBorders = true,
@@ -57,7 +58,7 @@ namespace TestApp
                 EditableColumnIndex = new List<int> { 1, 2, 4 }
             };
             WriteExcelToFile(
-                ExcelServiceHelper.CreateExcel(
+                excelServiceHelper.CreateExcel(
                         "excelSheet",
                         HeaderLevel1(),
                         workbookStyle,
@@ -122,15 +123,15 @@ namespace TestApp
         {
             return new List<ExcelHeader>
                 {
-                    new ExcelHeader { Name = "Order1", Style = ExcelServiceStyle.BlueAccent5L80 , Data = new List<object> { "A1", "B1", "C1" } },
-                    new ExcelHeader { Name = "Order2", Style = ExcelServiceStyle.BlueAccent5L80, Data = new List<object> { "A2", "B2", "C2" } },
-                    new ExcelHeader { Name = "Order3", Style = ExcelServiceStyle.BlueAccent5L80, Data = new List<object> { "A3", "B3", "C3" } },
-                    new ExcelHeader { Name = "Qty" , Style = ExcelServiceStyle.GreenAccent6L80, Data = new List<object> { 3, 1, 1 } },
-                    new ExcelHeader { Name = "Rate", Style = ExcelServiceStyle.GreenAccent6L80, Data = new List<object> { 8.42, 8.77, 8.46 } },
+                    new ExcelHeader { Name = "Order1", Style = ExcelStylePresets.BlueAccent5L80 , Data = new List<object> { "A1", "B1", "C1" } },
+                    new ExcelHeader { Name = "Order2", Style = ExcelStylePresets.BlueAccent5L80, Data = new List<object> { "A2", "B2", "C2" } },
+                    new ExcelHeader { Name = "Order3", Style = ExcelStylePresets.BlueAccent5L80, Data = new List<object> { "A3", "B3", "C3" } },
+                    new ExcelHeader { Name = "Qty" , Style = ExcelStylePresets.GreenAccent6L80, Data = new List<object> { 3, 1, 1 } },
+                    new ExcelHeader { Name = "Rate", Style = ExcelStylePresets.GreenAccent6L80, Data = new List<object> { 8.42, 8.77, 8.46 } },
                     new ExcelHeader
                     {
                         Name = "Term & Condition",
-                        Style = ExcelServiceStyle.GoldAccent4L80,
+                        Style = ExcelStylePresets.GoldAccent4L80,
                         Data= new List<object> { false, false, true }
                     }
                 };
@@ -142,36 +143,36 @@ namespace TestApp
             new ExcelHeader
             {
                 Name = "Order",
-                Style = ExcelServiceStyle.BlueAccent5L60,
+                Style = ExcelStylePresets.BlueAccent5L60,
                 SubHeaders = new List<ExcelHeader>
                 {
-                    new ExcelHeader { Name = "Order1", Style = ExcelServiceStyle.BlueAccent5L80 },
-                    new ExcelHeader { Name = "Order2", Style = ExcelServiceStyle.BlueAccent5L80 },
-                    new ExcelHeader { Name = "Order3", Style = ExcelServiceStyle.BlueAccent5L80 }
+                    new ExcelHeader { Name = "Order1", Style = ExcelStylePresets.BlueAccent5L80 },
+                    new ExcelHeader { Name = "Order2", Style = ExcelStylePresets.BlueAccent5L80 },
+                    new ExcelHeader { Name = "Order3", Style = ExcelStylePresets.BlueAccent5L80 }
                 }
             },
             new ExcelHeader
             {
                 Name = "Charges",
-                Style = ExcelServiceStyle.GoldAccent4L40,
+                Style = ExcelStylePresets.GoldAccent4L40,
                 SubHeaders = new List<ExcelHeader>
                 {
                     new ExcelHeader
                     {
                         Name = "V1",
-                        Style= ExcelServiceStyle.GoldAccent4L60,
+                        Style= ExcelStylePresets.GoldAccent4L60,
                         SubHeaders = NewSubHeader()
                     },
                     new ExcelHeader
                     {
                         Name = "V2",
-                        Style= ExcelServiceStyle.GoldAccent4L60,
+                        Style= ExcelStylePresets.GoldAccent4L60,
                         SubHeaders = NewSubHeader()
                     },
                     new ExcelHeader
                     {
                         Name = "V3",
-                        Style= ExcelServiceStyle.GoldAccent4L60,
+                        Style= ExcelStylePresets.GoldAccent4L60,
                         SubHeaders = NewSubHeader()
                     }
                 }
@@ -179,7 +180,7 @@ namespace TestApp
             new ExcelHeader
             {
                 Name = "Term & Condition",
-                Style = ExcelServiceStyle.GreenAccent6L80
+                Style = ExcelStylePresets.GreenAccent6L80
             }
         };
         }
@@ -200,30 +201,30 @@ namespace TestApp
             new ExcelHeader
             {
                 Name = "Order",
-                Style = ExcelServiceStyle.BlueAccent5L60,
+                Style = ExcelStylePresets.BlueAccent5L60,
                 SubHeaders = new List<ExcelHeader>
                 {
-                    new ExcelHeader { Name = "Order1", Style = ExcelServiceStyle.BlueAccent5L80 },
-                    new ExcelHeader { Name = "Order2", Style = ExcelServiceStyle.BlueAccent5L80 },
-                    new ExcelHeader { Name = "Order3", Style = ExcelServiceStyle.BlueAccent5L80 }
+                    new ExcelHeader { Name = "Order1", Style = ExcelStylePresets.BlueAccent5L80 },
+                    new ExcelHeader { Name = "Order2", Style = ExcelStylePresets.BlueAccent5L80 },
+                    new ExcelHeader { Name = "Order3", Style = ExcelStylePresets.BlueAccent5L80 }
                 }
             },
             new ExcelHeader
             {
                 Name = "V1",
-                Style= ExcelServiceStyle.GoldAccent4L60,
+                Style= ExcelStylePresets.GoldAccent4L60,
                 SubHeaders = NewSubHeader()
             },
             new ExcelHeader
             {
                 Name = "V2",
-                Style= ExcelServiceStyle.GoldAccent4L60,
+                Style= ExcelStylePresets.GoldAccent4L60,
                 SubHeaders = NewSubHeader()
             },
             new ExcelHeader
             {
                 Name = "V3",
-                Style= ExcelServiceStyle.GoldAccent4L60,
+                Style= ExcelStylePresets.GoldAccent4L60,
                 SubHeaders = NewSubHeader()
             }
         };
@@ -234,8 +235,8 @@ namespace TestApp
         {
             return new List<ExcelHeader>
                         {
-                            new ExcelHeader { Name = "Qty", Style = ExcelServiceStyle.GoldAccent4L80 },
-                            new ExcelHeader { Name = "Rate", Style = ExcelServiceStyle.GoldAccent4L80 }
+                            new ExcelHeader { Name = "Qty", Style = ExcelStylePresets.GoldAccent4L80 },
+                            new ExcelHeader { Name = "Rate", Style = ExcelStylePresets.GoldAccent4L80 }
                         };
         }
     }
