@@ -112,7 +112,7 @@ namespace ExcelService.Helper
             bool hasChildren = header.SubHeaders != null && header.SubHeaders.Any();
             int rowSpan = hasChildren ? 1 : totalDepth - usedDepth;
             int colSpan = leafCount;
-
+            header.CollNo = col;
             var range = ws.Cells[row, col, row + rowSpan - 1, col + colSpan - 1];
 
             // Only merge if the range covers multiple cells

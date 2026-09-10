@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using static OfficeOpenXml.ExcelErrorValue;
 namespace ExcelService.Service
 {
     public class ExcelServiceHelper
@@ -18,10 +19,9 @@ namespace ExcelService.Service
             return headers.Max(h => h.GetDepth());
         }
 
-        public static byte[] CreateExcel<T>(
+        public static byte[] CreateExcel(
             string sheetName,
             List<ExcelHeader> headers,
-            List<List<T>> data,
             ExcelWorkbookStyle excelWorkbookStyle,
             IDictionary<string, string> metadata = null,
             ExcelProtectionSetting excelProtectionSetting = null)
@@ -40,16 +40,18 @@ namespace ExcelService.Service
                 }
 
                 // Render data rows
-                int row = headers.Max(h => h.GetDepth()) + 1;
-                foreach (var record in data)
+                int row = headers.Max(h => h.GetDepth()) +1;
+                var rowData = row;
+                foreach (var record in headers)
                 {
-                    for (int i = 0; i < record.Count; i++)
+                    rowData = row;
+                    foreach (var value in record.Data)
                     {
-                        ws.Cells[row, i + 1].Value = record[i];
+                        ws.Cells[rowData, record.CollNo, rowData, record.CollNo].Value = value;
+                        rowData++;
                     }
-                    row++;
                 }
-
+                row = rowData;
                 //Auto-fit columns if requested
                 ExcelHelper.AutoFitColumns(
                     excelWorkbookStyle,
@@ -59,7 +61,7 @@ namespace ExcelService.Service
                 //int dataStartRow = headers.Max(h => h.GetDepth()) + 1;
                 // Apply thin borders to every cell in the data area
                 int lastRow = row - 1; // row was incremented after last record
-                int lastCol = data.Count > 0 ? data[0].Count : headers.Sum(h => h.GetLeafCount());
+                int lastCol = headers.Sum(h => h.GetLeafCount());
                 ExcelHelper.ApplyBorders(
                     excelWorkbookStyle,
                     ws,

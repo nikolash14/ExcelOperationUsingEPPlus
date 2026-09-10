@@ -14,7 +14,7 @@ namespace TestApp
         static void Main(string[] args)
         {
             CreateExcel();
-            ReadExcel();
+            //ReadExcel();
         }
         private static void ReadExcel()
         {
@@ -60,31 +60,31 @@ namespace TestApp
                 ExcelServiceHelper.CreateExcel(
                         "excelSheet",
                         HeaderLevel1(),
-                        DataLevel1(),
                         workbookStyle,
                         null,
                         excelProtectionSetting
                         ),
                 "Orders1.xlsx");
-            WriteExcelToFile(
-            ExcelServiceHelper.CreateExcel(
-                    "excelSheet",
-                    HeaderLevel2(),
-                    DataLevel2(),
-                    workbookStyle,
-                    null,
-                    excelProtectionSetting),
-            "Orders2.xlsx");
-            WriteExcelToFile(
-                ExcelServiceHelper.CreateExcel(
-                        "excelSheet",
-                        HeaderLevel3(),
-                        DataLevel3(),
-                        workbookStyle,
-                        null,
-                        excelProtectionSetting),
-                "Orders3.xlsx");
         }
+            //WriteExcelToFile(
+            //    ExcelServiceHelper.CreateExcel(
+            //            "excelSheet",
+            //            HeaderLevel2(),
+            //            DataLevel2(),
+            //            workbookStyle,
+            //            null,
+            //            excelProtectionSetting),
+            //    "Orders2.xlsx");
+            //    WriteExcelToFile(
+            //        ExcelServiceHelper.CreateExcel(
+            //                "excelSheet",
+            //                HeaderLevel3(),
+            //                DataLevel3(),
+            //                workbookStyle,
+            //                null,
+            //                excelProtectionSetting),
+            //        "Orders3.xlsx");
+            //}
 
         private static void WriteExcelToFile(byte[] excelBytes, string fileName)
         {
@@ -122,15 +122,16 @@ namespace TestApp
         {
             return new List<ExcelHeader>
                 {
-                    new ExcelHeader { Name = "Order1", Style = ExcelServiceStyle.BlueAccent5L80 },
-                    new ExcelHeader { Name = "Order2", Style = ExcelServiceStyle.BlueAccent5L80 },
-                    new ExcelHeader { Name = "Order3", Style = ExcelServiceStyle.BlueAccent5L80 },
-                    new ExcelHeader { Name = "Qty" , Style = ExcelServiceStyle.GreenAccent6L80},
-                    new ExcelHeader { Name = "Rate", Style = ExcelServiceStyle.GreenAccent6L80 },
+                    new ExcelHeader { Name = "Order1", Style = ExcelServiceStyle.BlueAccent5L80 , Data = new List<object> { "A1", "B1", "C1" } },
+                    new ExcelHeader { Name = "Order2", Style = ExcelServiceStyle.BlueAccent5L80, Data = new List<object> { "A2", "B2", "C2" } },
+                    new ExcelHeader { Name = "Order3", Style = ExcelServiceStyle.BlueAccent5L80, Data = new List<object> { "A3", "B3", "C3" } },
+                    new ExcelHeader { Name = "Qty" , Style = ExcelServiceStyle.GreenAccent6L80, Data = new List<object> { 3, 1, 1 } },
+                    new ExcelHeader { Name = "Rate", Style = ExcelServiceStyle.GreenAccent6L80, Data = new List<object> { 8.42, 8.77, 8.46 } },
                     new ExcelHeader
                     {
                         Name = "Term & Condition",
-                        Style = ExcelServiceStyle.GoldAccent4L80
+                        Style = ExcelServiceStyle.GoldAccent4L80,
+                        Data= new List<object> { false, false, true }
                     }
                 };
         }
@@ -240,17 +241,17 @@ namespace TestApp
     }
 
     public class ExcelRowData
-{
-    public string ColA { get; set; }   // "A1"
-    public string ColB { get; set; }   // "B1"
-    public string ColC { get; set; }   // "C1"
-    public int ColD { get; set; }      // 3
-    public double ColE { get; set; }   // 8.42
-    public int ColF { get; set; }      // 0
-    public double ColG { get; set; }   // 8.57
-    public int ColH { get; set; }      // 1
-    public double ColI { get; set; }   // 6.31
-    public bool ColJ { get; set; }     // false
-}
+    {
+        public string ColA { get; set; }   // "A1"
+        public string ColB { get; set; }   // "B1"
+        public string ColC { get; set; }   // "C1"
+        public int ColD { get; set; }      // 3
+        public double ColE { get; set; }   // 8.42
+        public int ColF { get; set; }      // 0
+        public double ColG { get; set; }   // 8.57
+        public int ColH { get; set; }      // 1
+        public double ColI { get; set; }   // 6.31
+        public bool ColJ { get; set; }     // false
+    }
 
 }
